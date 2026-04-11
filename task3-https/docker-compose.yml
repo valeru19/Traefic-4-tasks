@@ -1,0 +1,22 @@
+# docker-compose.yml для задания 3 — добавляем HTTPS
+# Новое: порт 443 и монтирование папки с сертификатами
+
+services:
+
+  traefik:
+    image: traefik:v3.3
+    ports:
+      - "80:80"     # HTTP (будет редиректить на HTTPS)
+      - "443:443"   # HTTPS — новый порт!
+      - "8080:8080" # Дашборд
+    volumes:
+      - ./traefik/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./traefik/fileprovider:/etc/traefik/fileprovider:ro
+      # Монтируем папку с сертификатами
+      # ./traefik/certs/ на хосте → /etc/certs/ в контейнере
+      - ./traefik/certs:/etc/certs:ro
+
+  nginx:
+    image: nginx:latest
+    ports:
+      - "81:80"

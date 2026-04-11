@@ -1,0 +1,23 @@
+# Динамическая конфигурация для задания 3
+# Отличие от задания 2: роутер теперь использует EntryPoint "websecure" (HTTPS)
+# и указывает tls: {} для включения TLS
+
+http:
+  routers:
+    nginx-router:
+      rule: "Host(`localhost`)"
+      # Теперь слушаем на HTTPS EntryPoint
+      entryPoints:
+        - websecure
+      service: nginx-service
+      # tls: {} — включаем TLS для этого роутера.
+      # Пустой объект {} означает "использовать сертификат по умолчанию"
+      # (тот, что описан в tls.yml)
+      tls: {}
+
+  services:
+    nginx-service:
+      loadBalancer:
+        servers:
+          - url: "http://nginx:80"
+        passHostHeader: true

@@ -1,0 +1,32 @@
+# docker-compose.yml для задания 2
+# Запускает Traefik + nginx в одной Docker-сети.
+# В рамках одной compose-сети контейнеры видят друг друга по имени сервиса.
+# То есть nginx доступен как http://nginx:80 — не нужен IP-адрес!
+
+services:
+
+  # ── TRAEFIK ──────────────────────────────────────────────────────────────
+  traefik:
+    image: traefik:v3.3
+    # Проброс портов: host_port:container_port
+    ports:
+      - "80:80"       # HTTP трафик
+      - "8080:8080"   # Дашборд Traefik (открыть: http://localhost:8080)
+    volumes:
+      # Монтируем статическую конфигурацию
+      # ./traefik.yml  — путь на хосте (рядом с docker-compose.yml)
+      # /etc/traefik/traefik.yml — путь внутри контейнера
+      - ./traefik.yml:/etc/traefik/traefik.yml:ro
+      # Монтируем папку с динамическими конфигами
+      - ./fileprovider:/etc/traefik/fileprovider:ro
+
+  # ── NGINX ────────────────────────────────────────────────────────────────
+  nginx:
+    image: nginx:latest
+    # Проброс порта 81 на хосте → 80 в контейнере
+    # Это позволяет обращаться к nginx НАПРЯМУЮ: http://localhost:81
+    # (минуя Traefik — удобно для отладки)
+    ports:
+      - "81:80"
+    # nginx не нужна никакая дополнительная конфигурация —
+    # стандартный образ уже отдаёт страницу приветствия

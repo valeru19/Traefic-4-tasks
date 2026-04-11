@@ -1,0 +1,32 @@
+# Статическая конфигурация для задания 4
+# Идентична заданию 3
+
+global:
+  checkNewVersion: false
+  sendAnonymousUsage: false
+
+log:
+  level: DEBUG
+  format: common
+
+api:
+  insecure: true
+  dashboard: true
+
+entryPoints:
+  web:
+    address: ":80"
+    http:
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
+          permanent: true
+
+  websecure:
+    address: ":443"
+
+providers:
+  file:
+    directory: /etc/traefik/fileprovider
+    watch: true

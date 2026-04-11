@@ -1,0 +1,37 @@
+# docker-compose.yml для задания 4 — добавляем Python Flask-сервис
+
+services:
+
+  traefik:
+    image: traefik:v3.3
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+    volumes:
+      - ./traefik/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./traefik/fileprovider:/etc/traefik/fileprovider:ro
+      - ./traefik/certs:/etc/certs:ro
+    # depends_on гарантирует порядок запуска:
+    # сначала стартуют nginx и python-app, потом traefik
+    depends_on:
+      - nginx
+      - python-app
+
+  nginx:
+    image: nginx:latest
+    ports:
+      - "81:80"
+
+  # ── PYTHON-APP ───────────────────────────────────────────────────────────
+  python-app:
+    # build: ./app — собрать образ из Dockerfile в папке ./app
+    build: ./app
+    # expose открывает порт ТОЛЬКО внутри Docker-сети (не на хосте)
+    # Traefik достучится до python-app:5000 внутри сети
+    # Снаружи порт 5000 НЕ доступен напрямую (проходит через Traefik)
+    expose:
+      - "5000"
+    # Переменные окружения для Flask (опционально)
+    environment:
+      - FLASK_ENV=production

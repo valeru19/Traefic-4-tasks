@@ -1,0 +1,58 @@
+# Динамическая конфигурация для задания 4
+# Добавляем второй роутер для Python-приложения на префиксе /app
+
+http:
+  # ── РОУТЕРЫ ──────────────────────────────────────────────────────────────
+  routers:
+
+    # Роутер для nginx: все запросы на localhost, КРОМЕ /app
+    nginx-router:
+      # Условие: хост localhost И путь НЕ начинается с /app
+      # PathPrefix(`/app`) — если путь начинается с /app
+      # ! — логическое отрицание
+      rule: "Host(`localhost`) && !PathPrefix(`/app`)"
+      entryPoints:
+        - websecure
+      service: nginx-service
+      tls: {}
+
+    # Роутер для Python-приложения: запросы на /app
+    python-app-router:
+      # Условие: хост localhost И путь начинается с /app
+      rule: "Host(`localhost`) && PathPrefix(`/app`)"
+      entryPoints:
+        - websecure
+      service: python-app-service
+      tls: {}
+      # Подключаем middleware для обрезки префикса
+      middlewares:
+        - strip-app-prefix
+
+  # ── MIDDLEWARES ───────────────────────────────────────────────────────────
+  middlewares:
+
+    # Middleware "strip-app-prefix" убирает /app из пути запроса.
+    # Зачем? Потому что Flask-приложение НЕ знает о префиксе /app.
+    # Без этого: запрос /app/hello → Flask получает /app/hello → 404
+    # С этим:    запрос /app/hello → middleware убирает /app → Flask получает /hello → 200
+    strip-app-prefix:
+      stripPrefix:
+        prefixes:
+          - "/app"
+
+  # ── СЕРВИСЫ ──────────────────────────────────────────────────────────────
+  services:
+
+    nginx-service:
+      loadBalancer:
+        servers:
+          - url: "http://nginx:80"
+        passHostHeader: true
+
+    python-app-service:
+      loadBalancer:
+        servers:
+          # "python-app" — имя сервиса из docker-compose.yml
+          # 5000 — порт, на котором работает Flask
+          - url: "http://python-app:5000"
+        passHostHeader: true

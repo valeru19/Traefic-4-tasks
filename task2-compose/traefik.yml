@@ -1,0 +1,27 @@
+# Статическая конфигурация для задания 2 (docker-compose)
+# Идентична заданию 1, но теперь работает через docker-compose
+
+global:
+  checkNewVersion: false
+  sendAnonymousUsage: false
+
+log:
+  level: DEBUG
+  format: common
+
+entryPoints:
+  web:
+    address: ":80"
+
+# Дашборд Traefik — визуальный интерфейс для просмотра конфигурации
+api:
+  # insecure: true — дашборд доступен без пароля
+  # В продакшне так делать нельзя! Только для учёбы.
+  insecure: true
+  # dashboard: true — включаем сам дашборд
+  dashboard: true
+
+providers:
+  file:
+    directory: /etc/traefik/fileprovider
+    watch: true

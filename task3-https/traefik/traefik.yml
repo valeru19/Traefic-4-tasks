@@ -1,0 +1,36 @@
+# Статическая конфигурация для задания 3 — добавляем HTTPS
+
+global:
+  checkNewVersion: false
+  sendAnonymousUsage: false
+
+log:
+  level: DEBUG
+  format: common
+
+api:
+  insecure: true
+  dashboard: true
+
+entryPoints:
+  # HTTP — принимаем запросы, но сразу редиректим на HTTPS
+  web:
+    address: ":80"
+    http:
+      redirections:
+        entryPoint:
+          # Перенаправляем все HTTP-запросы на EntryPoint "websecure"
+          to: websecure
+          # Меняем схему с http на https
+          scheme: https
+          # permanent: true — это 301 редирект (постоянный)
+          permanent: true
+
+  # HTTPS — основной EntryPoint для защищённых соединений
+  websecure:
+    address: ":443"
+
+providers:
+  file:
+    directory: /etc/traefik/fileprovider
+    watch: true
